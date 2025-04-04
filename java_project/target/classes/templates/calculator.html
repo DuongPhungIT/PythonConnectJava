@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .calculator {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            display: none;
+        }
+        .result.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h2>Calculator</h2>
+        <form action="/add" method="post">
+            <div class="form-group">
+                <label for="a">Number A:</label>
+                <input type="number" step="any" id="a" name="a" required>
+            </div>
+            <div class="form-group">
+                <label for="b">Number B:</label>
+                <input type="number" step="any" id="b" name="b" required>
+            </div>
+            <button type="submit">Add</button>
+        </form>
+        <div class="result" th:if="${result != null}" th:classappend="'show'">
+            <h3>Result:</h3>
+            <p th:text="${result}"></p>
+        </div>
+    </div>
+</body>
+</html> 
