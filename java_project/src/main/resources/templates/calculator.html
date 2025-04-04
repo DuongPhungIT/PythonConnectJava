@@ -50,6 +50,18 @@
         .result.show {
             display: block;
         }
+        .nav-links {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .nav-links a {
+            color: #4CAF50;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -69,6 +81,11 @@
         <div class="result" th:if="${result != null}" th:classappend="'show'">
             <h3>Result:</h3>
             <p th:text="${result}"></p>
+        </div>
+        
+        <div class="nav-links">
+            <a href="/">Calculator</a>
+            <a href="/image-comparison">Face Comparison</a>
         </div>
     </div>
 </body>

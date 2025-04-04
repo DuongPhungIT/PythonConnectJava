@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Face Comparison Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .result-container {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .result-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .result-item.true {
+            background-color: #dff0d8;
+            border: 1px solid #d6e9c6;
+            color: #3c763d;
+        }
+        .result-item.false {
+            background-color: #f2dede;
+            border: 1px solid #ebccd1;
+            color: #a94442;
+        }
+        .images {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .image-container {
+            width: 48%;
+            text-align: center;
+        }
+        .image-container img {
+            max-width: 100%;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .image-label {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .nav-links {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .nav-links a {
+            color: #4CAF50;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        .back-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+        .back-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Face Comparison Results</h1>
+        
+        <div class="result-container">
+            <div class="result-item" th:classappend="${isSamePerson ? 'true' : 'false'}">
+                <strong>Same Person:</strong> 
+                <span th:text="${isSamePerson ? 'Yes, the images are of the same person.' : 'No, the images are of different people.'}"></span>
+            </div>
+            
+            <div class="result-item" th:classappend="${image1IsFake ? 'false' : 'true'}">
+                <strong>Image 1:</strong> 
+                <span th:text="${image1IsFake ? 'This appears to be a fake image.' : 'This appears to be a real image.'}"></span>
+            </div>
+            
+            <div class="result-item" th:classappend="${image2IsFake ? 'false' : 'true'}">
+                <strong>Image 2:</strong> 
+                <span th:text="${image2IsFake ? 'This appears to be a fake image.' : 'This appears to be a real image.'}"></span>
+            </div>
+        </div>
+        
+        <div class="images">
+            <div class="image-container">
+                <img th:src="'file://' + ${image1Path}" alt="Image 1">
+                <div class="image-label">Image 1</div>
+            </div>
+            <div class="image-container">
+                <img th:src="'file://' + ${image2Path}" alt="Image 2">
+                <div class="image-label">Image 2</div>
+            </div>
+        </div>
+        
+        <a href="/image-comparison" class="back-button">Compare More Images</a>
+        
+        <div class="nav-links">
+            <a href="/">Calculator</a>
+            <a href="/image-comparison">Face Comparison</a>
+        </div>
+    </div>
+</body>
+</html> 

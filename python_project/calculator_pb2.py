@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10\x63\x61lculator.proto\x12\x1b\x63om.example.calculator.grpc\"\"\n\nAddRequest\x12\t\n\x01\x61\x18\x01 \x01(\x01\x12\t\n\x01\x62\x18\x02 \x01(\x01\"\x1d\n\x0b\x41\x64\x64Response\x12\x0e\n\x06result\x18\x01 \x01(\x01\x32o\n\x11\x43\x61lculatorService\x12Z\n\x03\x61\x64\x64\x12\'.com.example.calculator.grpc.AddRequest\x1a(.com.example.calculator.grpc.AddResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10\x63\x61lculator.proto\x12\x1b\x63om.example.calculator.grpc\"\"\n\nAddRequest\x12\t\n\x01\x61\x18\x01 \x01(\x01\x12\t\n\x01\x62\x18\x02 \x01(\x01\"\x1d\n\x0b\x41\x64\x64Response\x12\x0e\n\x06result\x18\x01 \x01(\x01\"B\n\x16ImageComparisonRequest\x12\x13\n\x0bimage1_path\x18\x01 \x01(\t\x12\x13\n\x0bimage2_path\x18\x02 \x01(\t\"a\n\x17ImageComparisonResponse\x12\x16\n\x0eis_same_person\x18\x01 \x01(\x08\x12\x16\n\x0eimage1_is_fake\x18\x02 \x01(\x08\x12\x16\n\x0eimage2_is_fake\x18\x03 \x01(\x08\x32\xed\x01\n\x11\x43\x61lculatorService\x12Z\n\x03\x61\x64\x64\x12\'.com.example.calculator.grpc.AddRequest\x1a(.com.example.calculator.grpc.AddResponse\"\x00\x12|\n\rcompareImages\x12\x33.com.example.calculator.grpc.ImageComparisonRequest\x1a\x34.com.example.calculator.grpc.ImageComparisonResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -25,6 +25,10 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_ADDREQUEST']._serialized_end=83
   _globals['_ADDRESPONSE']._serialized_start=85
   _globals['_ADDRESPONSE']._serialized_end=114
-  _globals['_CALCULATORSERVICE']._serialized_start=116
-  _globals['_CALCULATORSERVICE']._serialized_end=227
+  _globals['_IMAGECOMPARISONREQUEST']._serialized_start=116
+  _globals['_IMAGECOMPARISONREQUEST']._serialized_end=182
+  _globals['_IMAGECOMPARISONRESPONSE']._serialized_start=184
+  _globals['_IMAGECOMPARISONRESPONSE']._serialized_end=281
+  _globals['_CALCULATORSERVICE']._serialized_start=284
+  _globals['_CALCULATORSERVICE']._serialized_end=521
 # @@protoc_insertion_point(module_scope)

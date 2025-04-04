@@ -2,27 +2,33 @@ package com.example.calculator;
 
 import com.example.calculator.grpc.CalculatorGrpcClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Controller
+@RestController
+@RequestMapping("/api/calculator")
 public class CalculatorController {
+    private static final Logger logger = LoggerFactory.getLogger(CalculatorController.class);
+    
+    private final CalculatorGrpcClient calculatorGrpcClient;
 
     @Autowired
-    private CalculatorGrpcClient calculatorGrpcClient;
-
-    @GetMapping("/")
-    public String showCalculator() {
-        return "calculator";
+    public CalculatorController(CalculatorGrpcClient calculatorGrpcClient) {
+        this.calculatorGrpcClient = calculatorGrpcClient;
     }
 
     @PostMapping("/add")
-    public String add(@RequestParam double a, @RequestParam double b, Model model) {
-        double result = calculatorGrpcClient.add(a, b);
-        model.addAttribute("result", result);
-        return "calculator";
+    public ResponseEntity<Double> add(@RequestParam double a, @RequestParam double b) {
+        try {
+            logger.info("Received add request: {} + {}", a, b);
+            double result = calculatorGrpcClient.add(a, b);
+            logger.info("Add operation completed successfully: {}", result);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            logger.error("Error during add operation", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 } 

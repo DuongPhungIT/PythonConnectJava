@@ -20,6 +20,11 @@ class CalculatorServiceStub(object):
                 request_serializer=calculator__pb2.AddRequest.SerializeToString,
                 response_deserializer=calculator__pb2.AddResponse.FromString,
                 )
+        self.compareImages = channel.unary_unary(
+                '/com.example.calculator.grpc.CalculatorService/compareImages',
+                request_serializer=calculator__pb2.ImageComparisonRequest.SerializeToString,
+                response_deserializer=calculator__pb2.ImageComparisonResponse.FromString,
+                )
 
 
 class CalculatorServiceServicer(object):
@@ -33,6 +38,13 @@ class CalculatorServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def compareImages(self, request, context):
+        """Compare two images and check if they are the same person
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_CalculatorServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -40,6 +52,11 @@ def add_CalculatorServiceServicer_to_server(servicer, server):
                     servicer.add,
                     request_deserializer=calculator__pb2.AddRequest.FromString,
                     response_serializer=calculator__pb2.AddResponse.SerializeToString,
+            ),
+            'compareImages': grpc.unary_unary_rpc_method_handler(
+                    servicer.compareImages,
+                    request_deserializer=calculator__pb2.ImageComparisonRequest.FromString,
+                    response_serializer=calculator__pb2.ImageComparisonResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -66,5 +83,22 @@ class CalculatorService(object):
         return grpc.experimental.unary_unary(request, target, '/com.example.calculator.grpc.CalculatorService/add',
             calculator__pb2.AddRequest.SerializeToString,
             calculator__pb2.AddResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def compareImages(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/com.example.calculator.grpc.CalculatorService/compareImages',
+            calculator__pb2.ImageComparisonRequest.SerializeToString,
+            calculator__pb2.ImageComparisonResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

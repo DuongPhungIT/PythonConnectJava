@@ -24,6 +24,16 @@ public final class CalculatorProto {
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_com_example_calculator_grpc_AddResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_com_example_calculator_grpc_ImageComparisonRequest_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_com_example_calculator_grpc_ImageComparisonRequest_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_com_example_calculator_grpc_ImageComparisonResponse_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_com_example_calculator_grpc_ImageComparisonResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -35,12 +45,19 @@ public final class CalculatorProto {
     java.lang.String[] descriptorData = {
       "\n\020calculator.proto\022\033com.example.calculat" +
       "or.grpc\"\"\n\nAddRequest\022\t\n\001a\030\001 \001(\001\022\t\n\001b\030\002 " +
-      "\001(\001\"\035\n\013AddResponse\022\016\n\006result\030\001 \001(\0012o\n\021Ca" +
-      "lculatorService\022Z\n\003add\022\'.com.example.cal" +
-      "culator.grpc.AddRequest\032(.com.example.ca" +
-      "lculator.grpc.AddResponse\"\000B0\n\033com.examp" +
-      "le.calculator.grpcB\017CalculatorProtoP\001b\006p" +
-      "roto3"
+      "\001(\001\"\035\n\013AddResponse\022\016\n\006result\030\001 \001(\001\"B\n\026Im" +
+      "ageComparisonRequest\022\023\n\013image1_path\030\001 \001(" +
+      "\t\022\023\n\013image2_path\030\002 \001(\t\"a\n\027ImageCompariso" +
+      "nResponse\022\026\n\016is_same_person\030\001 \001(\010\022\026\n\016ima" +
+      "ge1_is_fake\030\002 \001(\010\022\026\n\016image2_is_fake\030\003 \001(" +
+      "\0102\355\001\n\021CalculatorService\022Z\n\003add\022\'.com.exa" +
+      "mple.calculator.grpc.AddRequest\032(.com.ex" +
+      "ample.calculator.grpc.AddResponse\"\000\022|\n\rc" +
+      "ompareImages\0223.com.example.calculator.gr" +
+      "pc.ImageComparisonRequest\0324.com.example." +
+      "calculator.grpc.ImageComparisonResponse\"" +
+      "\000B0\n\033com.example.calculator.grpcB\017Calcul" +
+      "atorProtoP\001b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -58,6 +75,18 @@ public final class CalculatorProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_com_example_calculator_grpc_AddResponse_descriptor,
         new java.lang.String[] { "Result", });
+    internal_static_com_example_calculator_grpc_ImageComparisonRequest_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_com_example_calculator_grpc_ImageComparisonRequest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_com_example_calculator_grpc_ImageComparisonRequest_descriptor,
+        new java.lang.String[] { "Image1Path", "Image2Path", });
+    internal_static_com_example_calculator_grpc_ImageComparisonResponse_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_com_example_calculator_grpc_ImageComparisonResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_com_example_calculator_grpc_ImageComparisonResponse_descriptor,
+        new java.lang.String[] { "IsSamePerson", "Image1IsFake", "Image2IsFake", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

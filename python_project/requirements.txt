@@ -1,2 +1,5 @@
 grpcio==1.62.0
-grpcio-tools==1.62.0 
+grpcio-tools==1.62.0
+deepface==0.0.93
+numpy==1.24.3
+opencv-python==4.8.0.76 

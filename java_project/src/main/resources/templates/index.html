@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Calculator & Image Comparison</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container { max-width: 800px; margin-top: 2rem; }
+        .card { margin-bottom: 2rem; }
+        .result { font-size: 1.2rem; font-weight: bold; margin-top: 1rem; }
+        .error { color: red; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Calculator & Image Comparison</h1>
+        
+        <!-- Calculator Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Calculator</h2>
+            </div>
+            <div class="card-body">
+                <form action="/calculate" method="post">
+                    <div class="mb-3">
+                        <label for="a" class="form-label">Number A:</label>
+                        <input type="number" step="any" class="form-control" id="a" name="a" th:value="${a}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="b" class="form-label">Number B:</label>
+                        <input type="number" step="any" class="form-control" id="b" name="b" th:value="${b}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Calculate</button>
+                </form>
+                
+                <div th:if="${result != null}" class="result">
+                    Result: <span th:text="${result}"></span>
+                </div>
+                <div th:if="${error}" class="error" th:text="${error}"></div>
+            </div>
+        </div>
+        
+        <!-- Image Comparison Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Image Comparison</h2>
+            </div>
+            <div class="card-body">
+                <form action="/compare-images" method="post">
+                    <div class="mb-3">
+                        <label for="image1Path" class="form-label">Image 1 Path:</label>
+                        <input type="text" class="form-control" id="image1Path" name="image1Path" th:value="${image1Path}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image2Path" class="form-label">Image 2 Path:</label>
+                        <input type="text" class="form-control" id="image2Path" name="image2Path" th:value="${image2Path}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Compare Images</button>
+                </form>
+                
+                <div th:if="${isSamePerson != null}" class="result">
+                    <p>Same Person: <span th:text="${isSamePerson}"></span></p>
+                    <p>Image 1 is Fake: <span th:text="${image1IsFake}"></span></p>
+                    <p>Image 2 is Fake: <span th:text="${image2IsFake}"></span></p>
+                </div>
+                <div th:if="${error}" class="error" th:text="${error}"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

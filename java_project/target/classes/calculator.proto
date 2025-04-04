@@ -10,6 +10,9 @@ option java_outer_classname = "CalculatorProto";
 service CalculatorService {
   // Add two numbers
   rpc add (AddRequest) returns (AddResponse) {}
+  
+  // Compare two images and check if they are the same person
+  rpc compareImages (ImageComparisonRequest) returns (ImageComparisonResponse) {}
 }
 
 // The request message containing two numbers.
@@ -21,4 +24,17 @@ message AddRequest {
 // The response message containing the result.
 message AddResponse {
   double result = 1;
+}
+
+// The request message containing two image paths.
+message ImageComparisonRequest {
+  string image1_path = 1;
+  string image2_path = 2;
+}
+
+// The response message containing the comparison results.
+message ImageComparisonResponse {
+  bool is_same_person = 1;
+  bool image1_is_fake = 2;
+  bool image2_is_fake = 3;
 } 
