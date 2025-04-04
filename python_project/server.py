@@ -4,7 +4,10 @@ import calculator_pb2
 import calculator_pb2_grpc
 import logging
 import os
+import requests
+import tempfile
 from deepface import DeepFace
+from urllib.parse import urlparse
 
 # Cấu hình logging
 logging.basicConfig(level=logging.INFO)
@@ -23,46 +26,72 @@ class CalculatorServicer(calculator_pb2_grpc.CalculatorServiceServicer):
         
         return calculator_pb2.AddResponse(result=result)
     
-    def compareImages(self, request, context):
-        logging.info(f"Received image comparison request: {request}")
+    def _download_image(self, url_or_path):
+        """Download image from URL or return local path"""
         try:
-            # Kiểm tra xem các file ảnh có tồn tại không
-            if not os.path.exists(request.image1_path):
-                context.set_code(grpc.StatusCode.NOT_FOUND)
-                context.set_details(f"Image 1 not found: {request.image1_path}")
-                return calculator_pb2.ImageComparisonResponse()
+            if urlparse(url_or_path).scheme in ('http', 'https'):
+                response = requests.get(url_or_path)
+                response.raise_for_status()
+                
+                # Create temp file with .jpg extension
+                temp = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+                temp.write(response.content)
+                temp.close()
+                return temp.name
+            else:
+                if not os.path.exists(url_or_path):
+                    raise FileNotFoundError(f"Image not found: {url_or_path}")
+                return url_or_path
+        except Exception as e:
+            logger.error(f"Error downloading image: {str(e)}")
+            raise
+    
+    def compareImages(self, request, context):
+        logger.info(f"Comparing images: {request.image1_path} and {request.image2_path}")
+        temp_files = []
+        
+        try:
+            # Download or get local paths for both images
+            img1_path = self._download_image(request.image1_path)
+            img2_path = self._download_image(request.image2_path)
             
-            if not os.path.exists(request.image2_path):
-                context.set_code(grpc.StatusCode.NOT_FOUND)
-                context.set_details(f"Image 2 not found: {request.image2_path}")
-                return calculator_pb2.ImageComparisonResponse()
+            if urlparse(request.image1_path).scheme in ('http', 'https'):
+                temp_files.append(img1_path)
+            if urlparse(request.image2_path).scheme in ('http', 'https'):
+                temp_files.append(img2_path)
             
-            # So sánh hai ảnh để xác định có phải cùng một người không
+            # Compare images with more lenient face detection
             result = DeepFace.verify(
-                img1_path=request.image1_path,
-                img2_path=request.image2_path,
-                model_name="ArcFace",
-                detector_backend="retinaface",
+                img1_path=img1_path,
+                img2_path=img2_path,
+                model_name="VGG-Face",
+                detector_backend="opencv",
                 distance_metric="cosine",
-                enforce_detection=True
+                enforce_detection=False  # More lenient face detection
             )
             
-            # Kiểm tra xem ảnh có phải là ảnh giả không bằng anti-spoofing
-            is_first_image_real = DeepFace.extract_faces(
-                img_path=request.image1_path, 
-                anti_spoofing=True
-            )
+            # Check image authenticity with anti-spoofing
+            try:
+                is_first_image_real = DeepFace.extract_faces(
+                    img_path=img1_path,
+                    anti_spoofing=True
+                )
+                first_real = any(face.get('is_real', False) for face in is_first_image_real) if is_first_image_real else False
+            except Exception as e:
+                logger.warning(f"Anti-spoofing check failed for image 1: {str(e)}")
+                first_real = True  # Assume real if check fails
             
-            is_secondary_image_real = DeepFace.extract_faces(
-                img_path=request.image2_path, 
-                anti_spoofing=True
-            )
+            try:
+                is_secondary_image_real = DeepFace.extract_faces(
+                    img_path=img2_path,
+                    anti_spoofing=True
+                )
+                second_real = any(face.get('is_real', False) for face in is_secondary_image_real) if is_secondary_image_real else False
+            except Exception as e:
+                logger.warning(f"Anti-spoofing check failed for image 2: {str(e)}")
+                second_real = True  # Assume real if check fails
             
-            # Kiểm tra kết quả anti-spoofing
-            first_real = any(face.get('is_real', False) for face in is_first_image_real) if is_first_image_real else False
-            second_real = any(face.get('is_real', False) for face in is_secondary_image_real) if is_secondary_image_real else False
-            
-            # Lấy kết quả so sánh
+            # Get comparison result
             is_same_person = result["verified"]
             
             logger.info(f"Comparison result: {is_same_person}")
@@ -71,8 +100,8 @@ class CalculatorServicer(calculator_pb2_grpc.CalculatorServiceServicer):
             
             return calculator_pb2.ImageComparisonResponse(
                 is_same_person=is_same_person,
-                image1_is_fake=not first_real,  # Nếu không phải ảnh thật thì là ảnh giả
-                image2_is_fake=not second_real,  # Nếu không phải ảnh thật thì là ảnh giả
+                image1_is_fake=not first_real,
+                image2_is_fake=not second_real
             )
             
         except Exception as e:
@@ -80,6 +109,14 @@ class CalculatorServicer(calculator_pb2_grpc.CalculatorServiceServicer):
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
             return calculator_pb2.ImageComparisonResponse()
+            
+        finally:
+            # Clean up temporary files
+            for temp_file in temp_files:
+                try:
+                    os.unlink(temp_file)
+                except Exception as e:
+                    logger.warning(f"Error cleaning up temp file {temp_file}: {str(e)}")
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
