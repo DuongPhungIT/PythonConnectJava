@@ -8,122 +8,164 @@ import requests
 import tempfile
 from deepface import DeepFace
 from urllib.parse import urlparse
+import time
+import json
+import socket
+import platform
+from logging.handlers import TimedRotatingFileHandler
+
+# Tạo thư mục logs nếu chưa tồn tại
+log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+os.makedirs(log_dir, exist_ok=True)
 
 # Cấu hình logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+class CustomFormatter(logging.Formatter):
+    def format(self, record):
+        # Lấy thông tin hệ thống
+        hostname = socket.gethostname()
+        process_id = os.getpid()
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
+        date_time = time.strftime('%d-%m-%Y %H:%M:%S')
+        
+        # Tạo message với định dạng yêu cầu
+        message = (
+            f"{timestamp} - {record.levelname} "
+            f"[{hostname}-{process_id}@LogUtils:{record.lineno}] - "
+            f"{date_time}\t"
+            f"{hostname}\t"
+            f"{record.funcName}\t"
+            f"{record.levelname}\t"
+            f"{record.process}\t"
+            f"{record.thread}\t"
+            f"{platform.platform()}\t"
+            f"{record.getMessage()}"
+        )
+        return message
+
+# Cấu hình logger
+logger = logging.getLogger('FaceComparison')
+logger.setLevel(logging.INFO)
+
+# Tạo handler cho console
+console_handler = logging.StreamHandler()
+console_formatter = CustomFormatter()
+console_handler.setFormatter(console_formatter)
+logger.addHandler(console_handler)
+
+# Tạo handler cho file với rotation theo ngày
+log_file = os.path.join(log_dir, 'face_comparison.log')
+file_handler = TimedRotatingFileHandler(
+    log_file,
+    when='midnight',
+    interval=1,
+    backupCount=30,  # Giữ 30 ngày
+    encoding='utf-8'
+)
+file_formatter = CustomFormatter()
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
 
 class CalculatorServicer(calculator_pb2_grpc.CalculatorServiceServicer):
+    def __init__(self):
+        logger.info("Server initialized")
+        self.start_time = time.time()
+
     def add(self, request, context):
-        # In ra các giá trị nhận được từ client
-        logger.info(f"Received request from client:")
-        logger.info(f"Number A: {request.a}")
-        logger.info(f"Number B: {request.b}")
-        
-        # Thực hiện phép cộng
+        request_data = {"a": request.a, "b": request.b}
         result = request.a + request.b
-        logger.info(f"Calculating: {request.a} + {request.b} = {result}")
-        
+        response_data = {"result": result}
+        logger.info(f"Request: {json.dumps(request_data)} Response: {json.dumps(response_data)}")
         return calculator_pb2.AddResponse(result=result)
     
-    def _download_image(self, url_or_path):
-        """Download image from URL or return local path"""
+    def _download_image(self, url, temp_dir, image_name):
         try:
-            if urlparse(url_or_path).scheme in ('http', 'https'):
-                response = requests.get(url_or_path)
-                response.raise_for_status()
-                
-                # Create temp file with .jpg extension
-                temp = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
-                temp.write(response.content)
-                temp.close()
-                return temp.name
-            else:
-                if not os.path.exists(url_or_path):
-                    raise FileNotFoundError(f"Image not found: {url_or_path}")
-                return url_or_path
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            
+            file_path = os.path.join(temp_dir, f"{image_name}.jpg")
+            with open(file_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+            return file_path
         except Exception as e:
-            logger.error(f"Error downloading image: {str(e)}")
+            logger.error(f"Download failed: {str(e)}")
             raise
     
     def compareImages(self, request, context):
-        logger.info(f"Comparing images: {request.image1_path} and {request.image2_path}")
-        temp_files = []
+        request_id = str(int(time.time() * 1000))
+        request_data = {
+            'request_id': request_id,
+            'image1': request.image1_path,
+            'image2': request.image2_path
+        }
         
         try:
-            # Download or get local paths for both images
-            img1_path = self._download_image(request.image1_path)
-            img2_path = self._download_image(request.image2_path)
-            
-            if urlparse(request.image1_path).scheme in ('http', 'https'):
-                temp_files.append(img1_path)
-            if urlparse(request.image2_path).scheme in ('http', 'https'):
-                temp_files.append(img2_path)
-            
-            # Compare images with more lenient face detection
-            result = DeepFace.verify(
-                img1_path=img1_path,
-                img2_path=img2_path,
-                model_name="VGG-Face",
-                detector_backend="opencv",
-                distance_metric="cosine",
-                enforce_detection=False  # More lenient face detection
-            )
-            
-            # Check image authenticity with anti-spoofing
-            try:
-                is_first_image_real = DeepFace.extract_faces(
-                    img_path=img1_path,
-                    anti_spoofing=True
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Tải ảnh
+                image1_path = self._download_image(request.image1_path, temp_dir, "image1")
+                image2_path = self._download_image(request.image2_path, temp_dir, "image2")
+                
+                # Kiểm tra ảnh 1
+                image1_faces = DeepFace.extract_faces(
+                    img_path=image1_path,
+                    anti_spoofing=True,
+                    detector_backend='opencv',
+                    enforce_detection=False
                 )
-                first_real = any(face.get('is_real', False) for face in is_first_image_real) if is_first_image_real else False
-            except Exception as e:
-                logger.warning(f"Anti-spoofing check failed for image 1: {str(e)}")
-                first_real = True  # Assume real if check fails
-            
-            try:
-                is_secondary_image_real = DeepFace.extract_faces(
-                    img_path=img2_path,
-                    anti_spoofing=True
+                image1_is_fake = not image1_faces[0]['is_real']
+
+                # Kiểm tra ảnh 2
+                image2_faces = DeepFace.extract_faces(
+                    img_path=image2_path,
+                    anti_spoofing=True,
+                    detector_backend='opencv',
+                    enforce_detection=False
                 )
-                second_real = any(face.get('is_real', False) for face in is_secondary_image_real) if is_secondary_image_real else False
-            except Exception as e:
-                logger.warning(f"Anti-spoofing check failed for image 2: {str(e)}")
-                second_real = True  # Assume real if check fails
-            
-            # Get comparison result
-            is_same_person = result["verified"]
-            
-            logger.info(f"Comparison result: {is_same_person}")
-            logger.info(f"Image 1 is real: {first_real}")
-            logger.info(f"Image 2 is real: {second_real}")
-            
-            return calculator_pb2.ImageComparisonResponse(
-                is_same_person=is_same_person,
-                image1_is_fake=not first_real,
-                image2_is_fake=not second_real
-            )
-            
+                image2_is_fake = not image2_faces[0]['is_real']
+
+                is_same_person = False
+                if not image1_is_fake and not image2_is_fake:
+                    result = DeepFace.verify(
+                        img1_path=image1_path,
+                        img2_path=image2_path,
+                        model_name="VGG-Face",
+                        detector_backend="opencv",
+                        enforce_detection=False
+                    )
+                    is_same_person = result["verified"]
+
+                response_data = {
+                    'request_id': request_id,
+                    'is_same_person': is_same_person,
+                    'image1_is_fake': image1_is_fake,
+                    'image2_is_fake': image2_is_fake
+                }
+                
+                logger.info(f"Request: {json.dumps(request_data)} Response: {json.dumps(response_data)}")
+                
+                return calculator_pb2.ImageComparisonResponse(
+                    is_same_person=is_same_person,
+                    image1_is_fake=image1_is_fake,
+                    image2_is_fake=image2_is_fake
+                )
         except Exception as e:
-            logger.error(f"Error in compareImages: {str(e)}")
+            error_data = {
+                'request_id': request_id,
+                'error': str(e),
+                'type': type(e).__name__
+            }
+            logger.error(f"Request: {json.dumps(request_data)} Error: {json.dumps(error_data)}")
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
             return calculator_pb2.ImageComparisonResponse()
-            
-        finally:
-            # Clean up temporary files
-            for temp_file in temp_files:
-                try:
-                    os.unlink(temp_file)
-                except Exception as e:
-                    logger.warning(f"Error cleaning up temp file {temp_file}: {str(e)}")
 
 def serve():
+    logger.info("Server started")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     calculator_pb2_grpc.add_CalculatorServiceServicer_to_server(CalculatorServicer(), server)
     server.add_insecure_port('[::]:50051')
     server.start()
-    logger.info("Server started on port 50051")
+    logger.info("Server listening on port 50051")
     server.wait_for_termination()
 
 if __name__ == '__main__':
