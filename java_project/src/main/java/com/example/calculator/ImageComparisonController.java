@@ -31,11 +31,7 @@ public class ImageComparisonController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Error during image comparison", e);
-            return ResponseEntity.ok(ImageComparisonResponse.newBuilder()
-                .setIsSamePerson(false)
-                .setImage1IsFake(false)
-                .setImage2IsFake(false)
-                .build());
+            return ResponseEntity.status(503).build();
         }
     }
 } 

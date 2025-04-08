@@ -43,18 +43,23 @@ public class IndexController {
                               @RequestParam String image2Path, 
                               Model model) {
         try {
-            var response = imageComparisonController.compareImages(image1Path, image2Path).getBody();
-            if (response != null) {
-                model.addAttribute("isSamePerson", response.getIsSamePerson());
-                model.addAttribute("image1IsFake", response.getImage1IsFake());
-                model.addAttribute("image2IsFake", response.getImage2IsFake());
-                model.addAttribute("image1Path", image1Path);
-                model.addAttribute("image2Path", image2Path);
-            } else {
-                model.addAttribute("error", "Failed to get response from image comparison service");
+            var response = imageComparisonController.compareImages(image1Path, image2Path);
+            
+            // Nếu server không khả dụng (503) hoặc response body là null
+            if (response.getStatusCode().value() == 503 || response.getBody() == null) {
+                model.addAttribute("error", "Không thể kết nối đến server xử lý ảnh. Vui lòng thử lại sau.");
+                return "index";
             }
+            
+            var body = response.getBody();
+            model.addAttribute("isSamePerson", body.getIsSamePerson());
+            model.addAttribute("image1IsFake", body.getImage1IsFake());
+            model.addAttribute("image2IsFake", body.getImage2IsFake());
+            model.addAttribute("image1Path", image1Path);
+            model.addAttribute("image2Path", image2Path);
+            
         } catch (Exception e) {
-            model.addAttribute("error", "Error comparing images: " + e.getMessage());
+            model.addAttribute("error", "Lỗi khi so sánh ảnh: " + e.getMessage());
         }
         return "index";
     }
